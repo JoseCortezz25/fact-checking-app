@@ -16,7 +16,8 @@ export const metadata: Metadata = {
       name: "josecortezz25",
       url: "https://github.com/josecortezz25"
     }
-  ]
+  ],
+  metadataBase: new URL("https://fact-checking-app-lemon.vercel.app/")
 };
 
 export default function RootLayout({
