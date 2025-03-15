@@ -1,64 +1,66 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ArrowUp, AlertCircle } from "lucide-react"
-import FactCheckResults from "@/components/fact-check-results"
-import { factCheck } from "@/actions/action"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowUp, AlertCircle, Loader2Icon } from "lucide-react";
+import FactCheckResults from "@/components/fact-check-results";
+import { factCheck } from "@/actions/action";
+import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
+import { FactCheckResponse } from "@/lib/types";
 
 export default function Home() {
-  const [inputText, setInputText] = useState("")
-  const [isChecking, setIsChecking] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [factCheckData, setFactCheckData] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [showQuotaWarning, setShowQuotaWarning] = useState(false)
+  const [inputText, setInputText] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [factCheckData, setFactCheckData] = useState<FactCheckResponse>();
+  const [error, setError] = useState<string | null>(null);
+  const [showQuotaWarning, setShowQuotaWarning] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!inputText.trim()) return
+  const handleValueChange = (value: string) => {
+    console.log("Value changed:", value);
 
-    setIsChecking(true)
-    setError(null)
-    setShowQuotaWarning(false)
+    setInputText(value);
+  };
+
+  const handleSubmit = async () => {
+    if (!inputText.trim()) return;
+    setIsLoading(true);
+    setError(null);
+    setShowQuotaWarning(false);
 
     try {
-      const result = await factCheck(inputText)
+      const result = await factCheck(inputText);
 
-      if (result.success) {
-        setFactCheckData(result)
-        setShowResults(true)
+      if ("fallback" in result) {
+        setFactCheckData(result);
+        setShowResults(true);
 
-        // Show quota warning if using fallback
         if (result.fallback) {
-          setShowQuotaWarning(true)
+          setShowQuotaWarning(true);
         }
       } else {
-        setError(result.error || "Failed to fact check. Please try again.")
+        setError(result.error || "Failed to fact check. Please try again.");
       }
     } catch (err) {
-      console.error("Unexpected error:", err)
-      setError("An unexpected error occurred. Please try again later.")
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred. Please try again later.");
     } finally {
-      setIsChecking(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const resetSearch = () => {
-    setShowResults(false)
-    setInputText("")
-    setError(null)
-    setShowQuotaWarning(false)
-  }
+    setShowResults(false);
+    setInputText("");
+    setError(null);
+    setShowQuotaWarning(false);
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-black text-white p-4">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-[#212121] text-[#ececec]">
       {!showResults ? (
         <div className="w-full max-w-3xl flex flex-col items-center">
-          <h1 className="text-3xl font-semibold mb-12">Fact Checker</h1>
+          <h1 className="text-2xl leading-7 w-[70%] md:w-full md:text-4xl md:leading-[39px] tracking-tight font-bold mb-7 text-center">Which doubt do you want to clear up?</h1>
 
           {showQuotaWarning && (
             <div className="mb-6 w-full p-4 bg-amber-900/20 border border-amber-900/50 rounded-lg flex items-start">
@@ -72,28 +74,38 @@ export default function Home() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="w-full">
-            <div className="relative w-full">
-              <Input
-                type="text"
-                placeholder="Enter a claim to fact-check..."
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                className="w-full py-6 px-4 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder:text-zinc-500 focus:border-zinc-700 focus:ring-0"
-              />
-              <Button
-                type="submit"
-                disabled={isChecking || !inputText.trim()}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-zinc-800 hover:bg-zinc-700 rounded-lg p-2"
+          <PromptInput
+            value={inputText}
+            onValueChange={handleValueChange}
+            isLoading={isLoading}
+            onSubmit={handleSubmit}
+            className="w-full max-w-(--breakpoint-md) bg-[#303030] border-[#303030] "
+          >
+            <PromptInputTextarea placeholder="Ask me anything..." className="text-[#ececec] !text-[18px]" />
+            <PromptInputActions className="justify-end pt-2">
+              <PromptInputAction
+                tooltip={isLoading ? "Stop generation" : "Send message"}
               >
-                {isChecking ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" />
-                ) : (
-                  <ArrowUp className="h-5 w-5" />
-                )}
-              </Button>
-            </div>
-          </form>
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="h-8 w-8 rounded-full cursor-pointer"
+                  onClick={handleSubmit}
+                  disabled={inputText.length < 15}
+                >
+                  {isLoading ? (
+                    <Loader2Icon className="size-5 animation-loader" />
+                  ) : (
+                    <ArrowUp className="size-5" />
+                  )}
+                </Button>
+              </PromptInputAction>
+            </PromptInputActions>
+          </PromptInput>
+          <p className="text-[#ececec] text-[10px] mt-4 text-center">
+            Factly es una herramienta avanzada que consulta diversas fuentes para proporcionar respuestas precisas. Sin embargo, no es infalible y puede ofrecer información incorrecta. <br />
+            Te recomendamos verificar siempre los datos críticos y consultar fuentes oficiales para obtener información actualizada y confiable.
+          </p>
 
           {error && (
             <div className="mt-6 w-full p-4 bg-red-900/20 border border-red-900/50 rounded-lg text-red-400">
@@ -105,6 +117,6 @@ export default function Home() {
         <FactCheckResults data={factCheckData} onReset={resetSearch} />
       )}
     </main>
-  )
+  );
 }
 

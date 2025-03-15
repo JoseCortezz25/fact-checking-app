@@ -163,3 +163,31 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+.animation-loader {
+  animation: 1s loader-spinning linear infinite;
+}
+
+@keyframes loader-spinning {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.analysis-content {
+  @apply text-[#ececec] max-w-none space-y-3;
+
+
+  ul > li {
+    @apply mb-4;
+  }
+
+  li {
+    @apply list-disc ml-6;
+  }
+}
