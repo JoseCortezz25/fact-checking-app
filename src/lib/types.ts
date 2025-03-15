@@ -1,7 +1,3 @@
-import { GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
-
-
-
 export enum VeracityLevels {
   TRUE = "true",
   FALSE = "false",
@@ -51,6 +47,6 @@ export type FactCheckResponse = {
     }[] | null | undefined;
     retrievalMetadata?: {
         webDynamicRetrievalScore: number;
-    } | {} | null | undefined;
+    } | Record<string, never> | null | undefined;
 } | null | undefined;
 };

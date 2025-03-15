@@ -3,13 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, AlertTriangle, CheckCircle, HelpCircle, Info, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { FactCheckResponse, VeracityLevels } from "@/lib/types";
 import showdown from 'showdown';
 
 interface FactCheckResultsProps {
-  data: FactCheckResponse | null
+  data: FactCheckResponse | undefined
   onReset: () => void
 }
 
@@ -44,19 +43,6 @@ export default function FactCheckResults({ data, onReset }: FactCheckResultsProp
     }
   };
 
-  const getReliabilityColor = (reliability: string) => {
-    switch (reliability.toLowerCase()) {
-      case "high":
-        return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "medium":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "low":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      default:
-        return "bg-zinc-500/10 text-zinc-500 border-zinc-500/20";
-    }
-  };
-
   return (
     <div className="w-full max-w-4xl">
       <Button variant="ghost" onClick={onReset} className="mb-8 text-zinc-400 hover:text-white hover:bg-zinc-900">
@@ -70,7 +56,7 @@ export default function FactCheckResults({ data, onReset }: FactCheckResultsProp
           <div>
             <h3 className="text-amber-500 font-medium mb-1">Limited Service Available</h3>
             <p className="text-amber-400/80 text-sm">
-              The fact-checking API is currently experiencing quota limitations. We're providing a limited response. For
+              The fact-checking API is currently experiencing quota limitations. We are providing a limited response. For
               accurate fact-checking, please try again later or consult trusted sources directly.
             </p>
           </div>
@@ -139,7 +125,7 @@ export default function FactCheckResults({ data, onReset }: FactCheckResultsProp
         </div>
       ) : (
         <div className="mb-8 p-4 border border-zinc-800 rounded-lg bg-zinc-900/50 text-zinc-400">
-          No sources were found for this fact check. The analysis is based on the model's knowledge.
+          No sources were found for this fact check.
         </div>
       )}
 
