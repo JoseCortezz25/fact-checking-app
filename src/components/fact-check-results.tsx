@@ -63,7 +63,7 @@ export default function FactCheckResults({ data, onReset }: FactCheckResultsProp
         </div>
       )}
 
-      <div className="mb-10 p-6 border border-zinc-800 rounded-xl bg-zinc-900/50">
+      <div className="mb-10 sm:p-6 sm:border sm:border-zinc-800 rounded-xl sm:bg-zinc-900/50">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-medium">Fact Check Results</h2>
           <Badge className={`px-3 py-1 rounded-full ${getVeracityColor(data.summary.veracity)}`}>

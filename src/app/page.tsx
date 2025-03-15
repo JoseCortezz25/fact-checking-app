@@ -17,8 +17,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleValueChange = (value: string) => {
-    console.log("Value changed:", value);
-
     setInputText(value);
   };
 
@@ -57,7 +55,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-[#212121] text-[#ececec]">
+    <main className="flex min-h-screen flex-col items-center justify-center py-4 px-6 sm:p-4 bg-[#212121] text-[#ececec]">
       {!showResults ? (
         <div className="w-full max-w-3xl flex flex-col items-center">
           <h1 className="text-2xl leading-7 w-[70%] md:w-full md:text-4xl md:leading-[39px] tracking-tight font-bold mb-7 text-center">Which doubt do you want to clear up?</h1>
@@ -102,9 +100,13 @@ export default function Home() {
               </PromptInputAction>
             </PromptInputActions>
           </PromptInput>
-          <p className="text-[#ececec] text-[10px] mt-4 text-center">
+          <p className="text-[#ececec] text-[10px] mt-4 text-center hidden sm:flex">
             Factly es una herramienta avanzada que consulta diversas fuentes para proporcionar respuestas precisas. Sin embargo, no es infalible y puede ofrecer información incorrecta. <br />
             Te recomendamos verificar siempre los datos críticos y consultar fuentes oficiales para obtener información actualizada y confiable.
+          </p>
+
+          <p className="text-[#ececec] text-[12px] mt-4 text-center flex sm:hidden">
+            Factly puede cometer errores. Verifica siempre las fuentes.
           </p>
 
           {error && (
