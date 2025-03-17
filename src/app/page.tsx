@@ -7,7 +7,6 @@ import FactCheckResults from "@/components/fact-check-results";
 import { factCheck } from "@/actions/action";
 import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
 import { FactCheckResponse } from "@/lib/types";
-import { Footer } from "@/components/footer";
 
 export default function Home() {
   const [inputText, setInputText] = useState("");
