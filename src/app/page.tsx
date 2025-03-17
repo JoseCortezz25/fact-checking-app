@@ -7,6 +7,7 @@ import FactCheckResults from "@/components/fact-check-results";
 import { factCheck } from "@/actions/action";
 import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
 import { FactCheckResponse } from "@/lib/types";
+import { Footer } from "@/components/footer";
 
 export default function Home() {
   const [inputText, setInputText] = useState("");
@@ -55,10 +56,12 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center py-4 px-6 sm:p-4 bg-[#212121] text-[#ececec]">
+    <main className="flex min-h-[calc(100dvh-70px)] flex-col items-center justify-center py-4 px-6 sm:p-4">
       {!showResults ? (
         <div className="w-full max-w-3xl flex flex-col items-center">
-          <h1 className="text-2xl leading-7 w-[70%] md:w-full md:text-4xl md:leading-[39px] tracking-tight font-bold mb-7 text-center">Which doubt do you want to clear up?</h1>
+          <h1 className="text-3xl leading-7 w-[70%] md:w-full md:text-4xl md:leading-[39px] tracking-tight font-bold mb-7 text-center">
+            Which doubt do you want to clear up?
+          </h1>
 
           {showQuotaWarning && (
             <div className="mb-6 w-full p-4 bg-amber-900/20 border border-amber-900/50 rounded-lg flex items-start">
@@ -101,12 +104,12 @@ export default function Home() {
             </PromptInputActions>
           </PromptInput>
           <p className="text-[#ececec] text-[10px] mt-4 text-center hidden sm:flex">
-            Factly es una herramienta avanzada que consulta diversas fuentes para proporcionar respuestas precisas. Sin embargo, no es infalible y puede ofrecer información incorrecta. <br />
-            Te recomendamos verificar siempre los datos críticos y consultar fuentes oficiales para obtener información actualizada y confiable.
+            Factly is an advanced tool that consults various sources to provide accurate answers. However, it is not infallible and may offer incorrect information. <br />
+            We recommend always verifying critical data and consulting official sources to obtain up-to-date and reliable information.
           </p>
 
           <p className="text-[#ececec] text-[12px] mt-4 text-center flex sm:hidden">
-            Factly puede cometer errores. Verifica siempre las fuentes.
+            Factly can make mistakes. Always verify the sources.
           </p>
 
           {error && (

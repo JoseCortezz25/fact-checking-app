@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Mukta } from "next/font/google";
 import "./globals.css";
+import { Footer } from "@/components/footer";
+import { cn } from "@/lib/utils";
 
 const mukta = Mukta({
   subsets: ["latin-ext"],
@@ -27,7 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={mukta.className}>{children}</body>
+      <body className={cn(mukta.className, "bg-[#212121] text-[#ececec]")}>
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
