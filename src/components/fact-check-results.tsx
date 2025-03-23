@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, AlertTriangle, CheckCircle, HelpCircle, Info, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FactCheckResponse, VeracityLevels } from "@/lib/types";
 import showdown from 'showdown';
 
@@ -20,26 +21,26 @@ export default function FactCheckResults({ data, onReset }: FactCheckResultsProp
   const getVeracityIcon = (veracity: string) => {
     switch (veracity.toLowerCase()) {
       case VeracityLevels.TRUE:
-        return <CheckCircle className="size-7 text-green-500" />;
+        return <CheckCircle className="!size-4 text-green-500" />;
       case VeracityLevels.FALSE:
-        return <AlertTriangle className="size-7 text-red-500" />;
+        return <AlertTriangle className="!size-4 text-red-500" />;
       case VeracityLevels.MIXTED:
-        return <HelpCircle className="size-7 text-yellow-500" />;
+        return <HelpCircle className="!size-4 text-yellow-500" />;
       default:
-        return <HelpCircle className="size-7 text-blue-500" />;
+        return <HelpCircle className="!size-4 text-blue-500" />;
     }
   };
 
   const getVeracityColor = (veracity: string) => {
     switch (veracity.toLowerCase()) {
       case VeracityLevels.TRUE:
-        return "bg-green-500/10 text-green-500 border-green-500/20";
+        return "bg-green-500/10 text-green-500 border-2 border-green-500/20";
       case VeracityLevels.FALSE:
-        return "bg-red-500/10 text-red-500 border-red-500/20";
+        return "bg-red-500/10 text-red-500 border-2 border-red-500/20";
       case VeracityLevels.MIXTED:
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+        return "bg-yellow-500/10 text-yellow-500 border-2 border-yellow-500/20";
       default:
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+        return "bg-blue-500/10 text-blue-500 border-2 border-blue-500/20";
     }
   };
 
@@ -68,7 +69,7 @@ export default function FactCheckResults({ data, onReset }: FactCheckResultsProp
           <h2 className="text-xl font-medium">Fact Check Results</h2>
           <Badge className={`px-3 py-1 rounded-full ${getVeracityColor(data.summary.veracity)}`}>
             {getVeracityIcon(data.summary.veracity)}
-            <span className="ml-1 text-md uppercase font-bold">{data.summary.veracity}</span>
+            <span className="ml-1 text-[16px] uppercase font-bold">{data.summary.veracity}</span>
           </Badge>
         </div>
 
@@ -82,18 +83,33 @@ export default function FactCheckResults({ data, onReset }: FactCheckResultsProp
           <div className="analysis-content" dangerouslySetInnerHTML={{ __html: analysisContent }} />
         </div>
 
-        <div className="mt-4 w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-          <div
-            className={`h-full ${data.summary.confidence > 0.7
-              ? "bg-green-500"
-              : data.summary.confidence > 0.4
-                ? "bg-yellow-500"
-                : "bg-red-500"
-              }`}
-            style={{ width: `${data.summary.confidence * 100}%` }}
-          />
+
+        <div className="flex justify-center gap-2 mt-5 w-full flex-col">
+          <div className="flex items-center gap-3">
+            <p className="text-md text-zinc-500 mt-1">Confidence: <strong>{Math.round(data.summary.confidence * 100)}%</strong></p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="size-4 text-zinc-500 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[300px] text-sm">
+                  <p>These are values that measure a model&apos;s confidence in a response or specific data point. These scores are typically in a range between 0 and 1, where a higher value indicates greater confidence that the information is correct or relevant.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${data.summary.confidence > 0.7
+                ? "bg-green-500"
+                : data.summary.confidence > 0.4
+                  ? "bg-yellow-500"
+                  : "bg-red-500"
+                }`}
+              style={{ width: `${data.summary.confidence * 100}%` }}
+            />
+          </div>
         </div>
-        <p className="text-xs text-zinc-500 mt-1">Confidence: {Math.round(data.summary.confidence * 100)}%</p>
       </div>
 
       <h3 className="text-lg font-medium mb-4">Sources</h3>

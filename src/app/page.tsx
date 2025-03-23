@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, AlertCircle, Loader2Icon } from "lucide-react";
 import FactCheckResults from "@/components/fact-check-results";
 import { factCheck } from "@/actions/action";
 import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
-import { FactCheckResponse } from "@/lib/types";
+import { FactCheckResponse, Location } from "@/lib/types";
 
 export default function Home() {
   const [inputText, setInputText] = useState("");
@@ -15,6 +15,37 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [location, setLocation] = useState<Location | null>(null);
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const response = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
+            if (!response.ok) return;
+
+            const locationInfo = await response.json();
+            console.log("locationInfo", locationInfo);
+            setLocation({
+              latitude,
+              longitude,
+              city: locationInfo.city,
+              country: locationInfo.country,
+              countryCode: locationInfo.countryCode
+            });
+          } catch (error) {
+            console.error("Error getting location info:", error);
+            setLocation({ latitude, longitude });
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    }
+  }, []);
 
   const handleValueChange = (value: string) => {
     setInputText(value);
@@ -27,7 +58,7 @@ export default function Home() {
     setShowQuotaWarning(false);
 
     try {
-      const result = await factCheck(inputText);
+      const result = await factCheck(inputText, location || undefined);
 
       if ("fallback" in result) {
         setFactCheckData(result);

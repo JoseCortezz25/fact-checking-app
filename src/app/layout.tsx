@@ -11,15 +11,15 @@ const mukta = Mukta({
 });
 
 export const metadata: Metadata = {
-  title: "Factly",
-  description: "Fact-checking tool powered by AI",
+  title: "Factly: AI Fact Checker",
+  description: "Fact-checking tool powered by AI. Our AI Fact Checker uses the latest AI Tech to help you verify information quickly and easily.",
   authors: [
     {
       name: "josecortezz25",
       url: "https://github.com/josecortezz25"
     }
   ],
-  metadataBase: new URL("https://fact-checking-app-lemon.vercel.app/")
+  metadataBase: new URL("https://factcheckerai.vercel.app/")
 };
 
 export default function RootLayout({
