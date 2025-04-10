@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, AlertCircle, Loader2Icon } from "lucide-react";
+import { ArrowUp, AlertCircle, Loader2Icon, X, Paperclip } from "lucide-react";
 import FactCheckResults from "@/components/fact-check-results";
 import { factCheck } from "@/actions/action";
 import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
@@ -16,6 +16,10 @@ export default function Home() {
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [location, setLocation] = useState<Location | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const [image, setImage] = useState<string>();
+  const [images, setImages] = useState<FileList | null>();
+
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -27,7 +31,6 @@ export default function Home() {
             if (!response.ok) return;
 
             const locationInfo = await response.json();
-            console.log("locationInfo", locationInfo);
             setLocation({
               latitude,
               longitude,
@@ -36,7 +39,6 @@ export default function Home() {
               countryCode: locationInfo.countryCode
             });
           } catch (error) {
-            console.error("Error getting location info:", error);
             setLocation({ latitude, longitude });
           }
         },
@@ -49,7 +51,7 @@ export default function Home() {
 
   const handleValueChange = (value: string) => {
     setInputText(value);
-  };
+  };;
 
   const handleSubmit = async () => {
     if (!inputText.trim()) return;
@@ -58,18 +60,24 @@ export default function Home() {
     setShowQuotaWarning(false);
 
     try {
-      const result = await factCheck(inputText, location || undefined);
 
-      if ("fallback" in result) {
-        setFactCheckData(result);
-        setShowResults(true);
+      console.log("iamgeURL", image);
+      
+      const result = await factCheck(inputText, image || undefined, location || undefined);
+      console.log("RESULT", result);
 
-        if (result.fallback) {
-          setShowQuotaWarning(true);
-        }
-      } else {
-        setError(result.error || "Failed to fact check. Please try again.");
-      }
+      
+      
+      // if ("fallback" in result) {
+      //   setFactCheckData(result);
+      //   setShowResults(true);
+
+      //   if (result.fallback) {
+      //     setShowQuotaWarning(true);
+      //   }
+      // } else {
+      //   setError(result.error || "Failed to fact check. Please try again.");
+      // }
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("An unexpected error occurred. Please try again later.");
@@ -83,6 +91,35 @@ export default function Home() {
     setInputText("");
     setError(null);
     setShowQuotaWarning(false);
+    setImages();
+    if (uploadInputRef.current) {
+      uploadInputRef.current.value = "";
+    }
+  };
+
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files: FileList | null = event.target.files;
+    setImages(files); 
+
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fileText = e.target?.result as string;
+        setImage(fileText);
+      };
+      reader.readAsText(selectedFile); 
+    }
+  };
+
+
+  
+  const handleRemoveFile = (index: number) => {
+    setImages(prev => prev ? prev.filter((_, i) => i !== index) : []);
+    if (uploadInputRef?.current) {
+      uploadInputRef.current.value = "";
+    }
   };
 
   return (
@@ -110,10 +147,48 @@ export default function Home() {
             onValueChange={handleValueChange}
             isLoading={isLoading}
             onSubmit={handleSubmit}
-            className="w-full max-w-(--breakpoint-md) bg-[#303030] border-[#303030] "
+            className="w-full max-w-(--breakpoint-md) bg-[#303030] border-[#303030]"
           >
-            <PromptInputTextarea placeholder="Ask me anything..." className="text-[#ececec] !text-[18px]" />
-            <PromptInputActions className="justify-end pt-2">
+            {images && images.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-1">
+                {images.map((image, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 bg-zinc-800/50 rounded-lg px-3 py-1.5 text-sm"
+                  >
+                    <Paperclip className="size-4 text-zinc-400" />
+                    <span className="max-w-[120px] truncate text-zinc-300">{image.name}</span>
+                    <button
+                      onClick={() => handleRemoveFile(index)}
+                      className="text-zinc-400 cursor-pointer hover:bg-red-600/60 hover:text-red-100 rounded-full p-1 transition-colors"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <PromptInputTextarea
+              placeholder="Ask me anything or paste a file..."
+              className="text-[#ececec] !text-[18px]"
+            />
+            <PromptInputActions className="justify-between pt-2">
+              <PromptInputAction tooltip="Attach files">
+                <label
+                  htmlFor="file-upload"
+                  className="hover:bg-zinc-800 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors"
+                >
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="file-upload"
+                    ref={uploadInputRef}
+                  />
+                  <Paperclip className="text-zinc-400 hover:text-white size-5 transition-colors" />
+                </label>
+              </PromptInputAction>
               <PromptInputAction
                 tooltip={isLoading ? "Stop generation" : "Send message"}
               >
@@ -133,6 +208,7 @@ export default function Home() {
               </PromptInputAction>
             </PromptInputActions>
           </PromptInput>
+
           <p className="text-[#ececec] text-[10px] mt-4 text-center hidden sm:flex">
             Factly is an advanced tool that consults various sources to provide accurate answers. However, it is not infallible and may offer incorrect information. <br />
             We recommend always verifying critical data and consulting official sources to obtain up-to-date and reliable information.

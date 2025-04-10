@@ -1,5 +1,6 @@
 'use server';
 
+import { getSystemPromptFactly, getSystemPromptImagely } from '@/lib/prompts';
 import {
   FactCheckResponse,
   VeracityLevels,
@@ -59,7 +60,14 @@ function isQuotaError(error: unknown): boolean {
   return false;
 }
 
-export async function factCheck(claim: string, location?: Location) {
+export async function factCheck(
+  claim: string,
+  imageUrl: string | undefined,
+  location?: Location
+) {
+  console.log('claim', claim);
+  console.log('image', imageUrl);
+
   try {
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       throw new Error(
@@ -67,45 +75,34 @@ export async function factCheck(claim: string, location?: Location) {
       );
     }
 
-    const systemPrompt = `You are a fact-checking assistant. Your task is to analyze claims and provide a detailed analysis of their accuracy. Your analysis should include a confidence score and a summary of the claim. You should also provide sources to support your analysis. If you cannot find any sources, please indicate that in your response. Also, your answers have to be in Spanish. Only Spanish is allowed.`;
-
     const prompt = `Fact check the following claim and provide a detailed analysis:
-    "${claim}"
-    
-    Analyze the accuracy of this claim using search results. Determine if it is True, False, or Mixed.
-    Provide a confidence score between 0 and 1.
-    Explain your reasoning with specific evidence from reliable sources.
-    
-    <INSTRUCTIONS>
-    - Provide a summary of the claim.
-    - Include a confidence score and a detailed analysis.
-    - Provide sources to support your analysis.
-    - If you cannot find any sources, indicate that in your response.
-    - Your answers should be in Spanish.
-    - You have to say if the claim is True, False or Mixed.
-    - Provide a confidence score between 0 and 1.
-    - Explain your reasoning with specific evidence from reliable sources.
-    - Your response should be in MARKDOWN format. 
-    - Do not response with "Búsqueda en Google:". Avoid that information.
-    - Use the location to search for relevant information based on the user's location.
-    - If the location is not provided, do not use it to search for information.
-    - Use current date to search for relevant information.
-    </INSTRUCTIONS>
-
-    <LOCATION>
-    ${location?.city ? `Ciudad: ${location.city}` : ''}
-    ${location?.country ? `País: ${location.country}` : ''}
-    ${location?.countryCode ? `Código de país: ${location.countryCode}` : ''}
-    ${location?.latitude ? `Latitud: ${location.latitude}` : ''}
-    ${location?.longitude ? `Longitud: ${location.longitude}` : ''}
-    </LOCATION>
-
-    <DATE>
-    ${new Date().toLocaleDateString()}
-    </DATE>
-    `;
+    "${claim}"`;
 
     try {
+      let generatedDescriptionImage;
+      // Analist Image Agent
+      if (imageUrl) {
+        const { text } = await generateText({
+          model: google('gemini-2.0-flash-exp'),
+          system: getSystemPromptImagely(),
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+                { type: 'image', image: new URL(imageUrl) }
+              ]
+            }
+          ]
+        });
+
+        generatedDescriptionImage = text;
+      }
+
+
+            console.log('getSystemPromptFactly', getSystemPromptFactly(location, generatedDescriptionImage));
+
+      // Factly Agent
       const { text, sources, providerMetadata } = await generateText({
         model: google('gemini-2.0-flash-exp', {
           useSearchGrounding: true,
@@ -114,10 +111,11 @@ export async function factCheck(claim: string, location?: Location) {
             dynamicThreshold: 0
           }
         }),
-        system: systemPrompt,
+        system: getSystemPromptFactly(location, generatedDescriptionImage),
         prompt,
         maxTokens: 1024
       });
+
 
       const metadata = providerMetadata?.google as
         | GoogleGenerativeAIProviderMetadata
