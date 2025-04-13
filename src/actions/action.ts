@@ -1,6 +1,6 @@
 'use server';
 
-import { getSystemPromptFactly, getSystemPromptImagely } from '@/lib/prompts';
+import { getSystemPromptFactly } from '@/lib/prompts';
 import {
   FactCheckResponse,
   VeracityLevels,
@@ -65,9 +65,6 @@ export async function factCheck(
   imageUrl: string | undefined,
   location?: Location
 ) {
-  console.log('claim', claim);
-  console.log('image', imageUrl);
-
   try {
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       throw new Error(
@@ -75,53 +72,41 @@ export async function factCheck(
       );
     }
 
+    const systemPrompt = getSystemPromptFactly(location);
     const prompt = `Fact check the following claim and provide a detailed analysis:
     "${claim}"`;
 
     try {
-      let generatedDescriptionImage;
-      // Analist Image Agent
-      if (imageUrl) {
-        const { text } = await generateText({
-          model: google('gemini-2.0-flash-exp'),
-          system: getSystemPromptImagely(),
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: prompt },
-                { type: 'image', image: new URL(imageUrl) }
-              ]
-            }
-          ]
-        });
-
-        generatedDescriptionImage = text;
-      }
-
-
-            console.log('getSystemPromptFactly', getSystemPromptFactly(location, generatedDescriptionImage));
-
       // Factly Agent
       const { text, sources, providerMetadata } = await generateText({
-        model: google('gemini-2.0-flash-exp', {
+        model: google('gemini-2.5-pro-exp-03-25', {
           useSearchGrounding: true,
           dynamicRetrievalConfig: {
             mode: 'MODE_DYNAMIC',
             dynamicThreshold: 0
           }
         }),
-        system: getSystemPromptFactly(location, generatedDescriptionImage),
-        prompt,
-        maxTokens: 1024
+        system: systemPrompt,
+        maxTokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: imageUrl
+              ? [
+                  { type: 'text', text: prompt },
+                  { type: 'image', image: imageUrl }
+                ]
+              : [{ type: 'text', text: prompt }]
+          }
+        ]
       });
-
 
       const metadata = providerMetadata?.google as
         | GoogleGenerativeAIProviderMetadata
         | undefined;
       const groundingMetadata = metadata?.groundingMetadata;
 
+      // Veracity Agent
       const { object } = await generateObject({
         model: google('gemini-2.0-flash-exp'),
         system: ``,
@@ -198,6 +183,8 @@ export async function factCheck(
         errorMessage = error.message;
       }
     }
+
+    console.log('ERROR MESSAGE', errorMessage);
 
     return {
       success: false,

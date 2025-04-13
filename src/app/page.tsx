@@ -8,6 +8,12 @@ import { factCheck } from "@/actions/action";
 import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
 import { FactCheckResponse, Location } from "@/lib/types";
 
+interface ImageState {
+  name: string;
+  file: File;
+  imageUrl: string;
+}
+
 export default function Home() {
   const [inputText, setInputText] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -17,9 +23,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [location, setLocation] = useState<Location | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<string>();
-  const [images, setImages] = useState<FileList | null>();
-
+  const [image, setImage] = useState<ImageState | null>(null);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -60,24 +64,20 @@ export default function Home() {
     setShowQuotaWarning(false);
 
     try {
-
-      console.log("iamgeURL", image);
-      
-      const result = await factCheck(inputText, image || undefined, location || undefined);
+      console.log("image", image);
+      const result = await factCheck(inputText, image ? image.imageUrl : undefined, location || undefined);
       console.log("RESULT", result);
 
-      
-      
-      // if ("fallback" in result) {
-      //   setFactCheckData(result);
-      //   setShowResults(true);
+      if ("fallback" in result) {
+        setFactCheckData(result);
+        setShowResults(true);
 
-      //   if (result.fallback) {
-      //     setShowQuotaWarning(true);
-      //   }
-      // } else {
-      //   setError(result.error || "Failed to fact check. Please try again.");
-      // }
+        if (result.fallback) {
+          setShowQuotaWarning(true);
+        }
+      } else {
+        setError(result.error || "Failed to fact check. Please try again.");
+      }
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("An unexpected error occurred. Please try again later.");
@@ -91,32 +91,30 @@ export default function Home() {
     setInputText("");
     setError(null);
     setShowQuotaWarning(false);
-    setImages();
+    setImage(null); 
     if (uploadInputRef.current) {
       uploadInputRef.current.value = "";
     }
   };
 
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files: FileList | null = event.target.files;
-    setImages(files); 
-
-    if (files && files.length > 0) {
-      const selectedFile = files[0];
+    if (event.target.files && event.target.files.length > 0) {
+      const selectedFile = event.target.files[0];
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const fileText = e.target?.result as string;
-        setImage(fileText);
+
+      reader.onload = (event) => {
+        setImage({
+          name: selectedFile.name,
+          file: selectedFile,
+          imageUrl: event.target?.result as string
+        });
       };
-      reader.readAsText(selectedFile); 
+      reader.readAsDataURL(selectedFile);
     }
   };
 
-
-  
-  const handleRemoveFile = (index: number) => {
-    setImages(prev => prev ? prev.filter((_, i) => i !== index) : []);
+  const handleRemoveFile = () => {
+    setImage(null);
     if (uploadInputRef?.current) {
       uploadInputRef.current.value = "";
     }
@@ -149,23 +147,17 @@ export default function Home() {
             onSubmit={handleSubmit}
             className="w-full max-w-(--breakpoint-md) bg-[#303030] border-[#303030]"
           >
-            {images && images.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-1">
-                {images.map((image, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 bg-zinc-800/50 rounded-lg px-3 py-1.5 text-sm"
-                  >
-                    <Paperclip className="size-4 text-zinc-400" />
-                    <span className="max-w-[120px] truncate text-zinc-300">{image.name}</span>
-                    <button
-                      onClick={() => handleRemoveFile(index)}
-                      className="text-zinc-400 cursor-pointer hover:bg-red-600/60 hover:text-red-100 rounded-full p-1 transition-colors"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </div>
-                ))}
+
+            {image && (
+              <div className="inline-flex items-center gap-2 bg-zinc-800/50 rounded-lg px-3 py-1.5 text-sm">
+                <Paperclip className="size-4 text-zinc-400" />
+                <span className="max-w-[120px] truncate text-zinc-300">{image.name}</span>
+                <button
+                  onClick={() => handleRemoveFile()}
+                  className="text-zinc-400 cursor-pointer hover:bg-red-600/60 hover:text-red-100 rounded-full p-1 transition-colors"
+                >
+                  <X className="size-3" />
+                </button>
               </div>
             )}
             <PromptInputTextarea
