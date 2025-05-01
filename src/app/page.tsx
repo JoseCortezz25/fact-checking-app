@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, AlertCircle, Loader2Icon } from "lucide-react";
+import { ArrowUp, AlertCircle, Loader2Icon, SearchIcon } from "lucide-react";
 import FactCheckResults from "@/components/fact-check-results";
 import { factCheck } from "@/actions/action";
 import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
 import { FactCheckResponse, Location } from "@/lib/types";
+import { mainResearch } from "@/actions/deep-research";
 
 export default function Home() {
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState("Electric cars are bad for the environment");
   const [showResults, setShowResults] = useState(false);
   const [factCheckData, setFactCheckData] = useState<FactCheckResponse>();
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +114,17 @@ export default function Home() {
             className="w-full max-w-(--breakpoint-md) bg-[#303030] border-[#303030] "
           >
             <PromptInputTextarea placeholder="Ask me anything..." className="text-[#ececec] !text-[18px]" />
-            <PromptInputActions className="justify-end pt-2">
+            <PromptInputActions className="justify-between pt-2">
+              
+              <Button
+                variant="ghost"
+                onClick={() => mainResearch(inputText)}
+                className="outline-[1px] outline-gray-100/10 rounded-full cursor-pointer"
+              >
+                <SearchIcon className="size-4" />
+                Deep Research Mode
+              </Button>
+
               <PromptInputAction
                 tooltip={isLoading ? "Stop generation" : "Send message"}
               >
