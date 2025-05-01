@@ -8,15 +8,17 @@ import { factCheck } from "@/actions/action";
 import { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
 import { FactCheckResponse, Location } from "@/lib/types";
 import { mainResearch } from "@/actions/deep-research";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
-  const [inputText, setInputText] = useState("Electric cars are bad for the environment");
+  const [inputText, setInputText] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [factCheckData, setFactCheckData] = useState<FactCheckResponse>();
   const [error, setError] = useState<string | null>(null);
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [location, setLocation] = useState<Location | null>(null);
+  const [mode, setMode] = useState<"fast-check" | "deep-research">("fast-check");
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -59,7 +61,7 @@ export default function Home() {
     setShowQuotaWarning(false);
 
     try {
-      const result = await factCheck(inputText, location || undefined);
+      const result = mode === "fast-check" ? await factCheck(inputText, location || undefined) : await mainResearch(inputText);
 
       if ("fallback" in result) {
         setFactCheckData(result);
@@ -76,6 +78,7 @@ export default function Home() {
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setIsLoading(false);
+      setMode("fast-check");
     }
   };
 
@@ -115,14 +118,16 @@ export default function Home() {
           >
             <PromptInputTextarea placeholder="Ask me anything..." className="text-[#ececec] !text-[18px]" />
             <PromptInputActions className="justify-between pt-2">
-              
+
               <Button
                 variant="ghost"
-                onClick={() => mainResearch(inputText)}
-                className="outline-[1px] outline-gray-100/10 rounded-full cursor-pointer"
+                onClick={() => {
+                  setMode(mode === "fast-check" ? "deep-research" : "fast-check");
+                }}
+                className={cn("rounded-full cursor-pointer hover:bg-[#242424] hover:text-[#ececec]", mode === "deep-research" && "bg-[#AFDDFF] text-[#102E50] hover:bg-[#AFDDFF] hover:text-[#102E50]")}
               >
                 <SearchIcon className="size-4" />
-                Deep Research Mode
+                Deep Research
               </Button>
 
               <PromptInputAction
