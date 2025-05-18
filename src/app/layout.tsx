@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Mukta } from "next/font/google";
-import "./globals.css";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Footer } from "@/components/footer";
 import { cn } from "@/lib/utils";
+import "./globals.css";
 
 const mukta = Mukta({
   subsets: ["latin-ext"],
@@ -33,6 +34,7 @@ export default function RootLayout({
         {children}
         <Footer />
       </body>
+      <GoogleAnalytics gaId={process.env.GOOGLE_ANALYTICS_ID} />
     </html>
   );
 }
