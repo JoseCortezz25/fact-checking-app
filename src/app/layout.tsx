@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
 import { Mukta } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Footer } from "@/components/footer";
 import { cn } from "@/lib/utils";
+import { Metadata } from "next/dist/types";
 import "./globals.css";
 
 const mukta = Mukta({
@@ -20,7 +20,15 @@ export const metadata: Metadata = {
       url: "https://github.com/josecortezz25"
     }
   ],
-  metadataBase: new URL("https://factcheckerai.vercel.app/")
+  metadataBase: new URL("https://factcheckerai.vercel.app/"),
+  keywords: ["factly", "ai", "fact", "checker", "fact-checking", "ai-fact-checker", "ai-fact-checking", "ai-fact-checker", "ai-fact-checking"],
+  robots: {
+    index: true,
+    follow: true,
+    noimageindex: true,
+    noarchive: true,
+    nosnippet: true
+  }
 };
 
 export default function RootLayout({
@@ -34,7 +42,7 @@ export default function RootLayout({
         {children}
         <Footer />
       </body>
-      <GoogleAnalytics gaId={process.env.GOOGLE_ANALYTICS_ID} />
+      <GoogleAnalytics gaId={process.env.GOOGLE_ANALYTICS_ID || ""} />
     </html>
   );
 }
